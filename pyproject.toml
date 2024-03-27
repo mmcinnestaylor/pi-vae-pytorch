@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pi-vae-pytorch"
+dynamic = ["version"]
+dependencies = ["torch"]
+requires-python = ">= 3.9"
+authors = [
+    {name = "Marlan McInnes-Taylor", email = "mmcinnestaylor@gmail.com"}
+]
+maintainers = [
+    {name = "Marlan McInnes-Taylor", email = "mmcinnestaylor@gmail.com"}
+]
+description = "A variational auto encoder used to construct latent variable models of neural activity while simultaneously modeling the relation between the latent and task variables."
+readme = "README.md"
+keywords = [
+    "vae",
+    "pi-vae",
+    "poisson identifiable vae",
+    "poisson identifiable variational autoencoder",
+    "identifiable vae",
+    "identifiable variational autoencoder"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://mmcinnestaylor.github.io/pi-vae-pytorch/"
+Repository = "https://github.com/mmcinnestaylor/pi-vae-pytorch"
