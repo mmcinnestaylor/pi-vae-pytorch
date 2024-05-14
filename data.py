@@ -60,6 +60,7 @@ def simulate_data_discrete(
     """
 
     mu_true = torch.empty((2, n_cls)).uniform_(-5, 5)
+    # mu_true = torch.empty((2, n_cls)).uniform_(-0.01, 0.01) # not separable
     var_true = torch.empty((2, n_cls)).uniform_(.5, 3)
     u_true = torch.tile(torch.arange(n_cls), (n_samples//n_cls, ))
 
