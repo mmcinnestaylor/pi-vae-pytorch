@@ -1,8 +1,6 @@
 from typing import Union, Optional
-
 import torch
 from torch import nn
-
 from pi_vae_pytorch.decoders import GINFlowDecoder
 from pi_vae_pytorch.encoders import MLPEncoder
 from pi_vae_pytorch.label_prior import LabelPriorContinuous, LabelPriorDiscrete
@@ -56,12 +54,12 @@ class PiVAE(nn.Module):
         encoder_hidden_layer_activation: nn.Module = nn.Tanh,
         decoder_n_gin_blocks: int = 2,
         decoder_gin_block_depth: int = 2,
-        decoder_affine_input_layer_slice_dim: int = None,
+        decoder_affine_input_layer_slice_dim: Optional[int] = None,
         decoder_affine_n_hidden_layers: int = 2,
-        decoder_affine_hidden_layer_dim: int = None,
+        decoder_affine_hidden_layer_dim: Optional[int] = None,
         decoder_affine_hidden_layer_activation: nn.Module = nn.ReLU,
         decoder_nflow_n_hidden_layers: int = 2,
-        decoder_nflow_hidden_layer_dim: int = None,
+        decoder_nflow_hidden_layer_dim: Optional[int] = None,
         decoder_nflow_hidden_layer_activation: nn.Module = nn.ReLU,
         decoder_observation_model: str = 'poisson',
         decoder_fr_clamp_min: float = 1E-7,
@@ -142,7 +140,7 @@ class PiVAE(nn.Module):
 
         with torch.no_grad():
             # Sample latent z using reparameterization trick
-            encoder_z_sample = encoder_mean + torch.exp(0.5 * encoder_log_variance) * torch.randn_like(encoder_mean)
+            encoder_z_sample = self.reparameterization_trick(mean=encoder_mean, log_variance=encoder_log_variance)
 
             # Generate firing rate using sampled latent z
             encoder_firing_rate = self.decoder(encoder_z_sample)
@@ -165,7 +163,7 @@ class PiVAE(nn.Module):
             posterior_mean, posterior_log_variance = self.compute_posterior(encoder_mean, encoder_log_variance, label_mean, label_log_variance)  
 
             # Sample latent z using reparameterization trick
-            posterior_z_sample = posterior_mean + torch.exp(0.5 * posterior_log_variance) * torch.randn_like(posterior_mean)
+            posterior_z_sample = self.reparameterization_trick(mean=posterior_mean, log_variance=posterior_log_variance)
 
             # Generate firing rate using sampled latent z
             posterior_firing_rate = self.decoder(posterior_z_sample)
@@ -232,7 +230,7 @@ class PiVAE(nn.Module):
         with torch.no_grad():
             encoded_mean, encoded_log_variance = self.encoder(x)
             # Sample latent z using reparameterization trick
-            encoded = encoded_mean + torch.exp(0.5 * encoded_log_variance) * torch.randn_like(encoded_mean)
+            encoded = self.reparameterization_trick(mean=encoded_mean, log_variance=encoded_log_variance)
 
         if return_stats:
             return encoded, encoded_mean, encoded_log_variance
@@ -398,7 +396,7 @@ class PiVAE(nn.Module):
     mean_0: torch.Tensor, 
     log_variance_0: torch.Tensor, 
     mean_1: torch.Tensor, 
-    log_variance_1: torch.Tensor,
+    log_variance_1: torch.Tensor
     ) -> torch.Tensor:
         """
         Computes the posterior of two distributions as a product of Gaussians.
@@ -425,3 +423,23 @@ class PiVAE(nn.Module):
         posterior_log_variance = log_variance_0 + log_variance_1 - torch.log(torch.exp(log_variance_0) + torch.exp(log_variance_1))
 
         return posterior_mean, posterior_log_variance
+    
+    @staticmethod
+    def reparameterization_trick(
+    mean: torch.Tensor, 
+    log_variance: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Samples from an isotropic unit Gaussian distribution using the reparameterization trick.
+
+        Parameters
+        ----------
+        - mean (Tensor) - mean of a distribution. Size([n_samples, sample_dim])
+        - log_variance (Tensor) - log of variance of a distribution. Size([n_samples, sample_dim])
+
+        Returns
+        -------
+        - samples: a sample from the distribution. Size([n_samples, sample_dim])
+        """
+
+        return mean + torch.exp(0.5 * log_variance) * torch.randn_like(mean)

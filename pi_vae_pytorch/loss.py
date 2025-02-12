@@ -1,3 +1,4 @@
+from typing import Optional
 import torch
 from torch import nn
 
@@ -46,7 +47,7 @@ class ELBOLoss(nn.Module):
         version: int = 2,
         alpha: float = 0.5,
         observation_model: str = 'poisson',
-        device: torch.device = None
+        device: Optional[torch.device] = None
         ) -> None:
         super().__init__()
 
@@ -77,9 +78,9 @@ class ELBOLoss(nn.Module):
         posterior_log_variance: torch.Tensor,
         label_mean: torch.Tensor, 
         label_log_variance: torch.Tensor,
-        encoder_mean: torch.Tensor = None,
-        encoder_log_variance: torch.Tensor = None,
-        observation_noise_model: nn.Module = None
+        encoder_mean: Optional[torch.Tensor] = None,
+        encoder_log_variance: Optional[torch.Tensor] = None,
+        observation_noise_model: Optional[nn.Module] = None
         ) -> torch.Tensor:
 
         if self.observation_model == 'poisson':
@@ -91,8 +92,8 @@ class ELBOLoss(nn.Module):
         if self.version == 1:
             kl_loss = 0.5 * self.compute_kl_loss(posterior_mean, posterior_log_variance, label_mean, label_log_variance)
         else:
-            encoder_kl_loss = 0.5 * self.compute_kl_loss(encoder_mean, encoder_log_variance, label_mean, label_log_variance)
-            posterior_kl_loss = 0.5 * self.compute_kl_loss(posterior_mean, posterior_log_variance, label_mean, label_log_variance)
+            encoder_kl_loss = self.compute_kl_loss(encoder_mean, encoder_log_variance, label_mean, label_log_variance)
+            posterior_kl_loss = self.compute_kl_loss(posterior_mean, posterior_log_variance, label_mean, label_log_variance)
             kl_loss = self.alpha * encoder_kl_loss + (1 - self.alpha) * posterior_kl_loss
         
         return torch.mean(observation_log_liklihood - kl_loss)
@@ -120,4 +121,4 @@ class ELBOLoss(nn.Module):
         """
 
         kl_loss = 1 + log_variance_0 - log_variance_1 - ((torch.square(mean_0 - mean_1) + torch.exp(log_variance_0)) / torch.exp(log_variance_1))
-        return torch.sum(kl_loss, dim=-1)
+        return 0.5 * torch.sum(kl_loss, dim=-1)

@@ -582,6 +582,22 @@ outputs = model(x, u) # dict
     - **posterior_log_variance:** *Tensor of shape(n_samples, sample_dim)*  
         Log of variance of the posterior distribution.  
 
+- **reparameterization_trick(*mean, log_variance*)**  
+    Samples from an isotropic unit Gaussian distribution using the reparameterization trick.  
+
+    > **Parameters:**  
+
+    - **mean:** *Tensor of shape(n_samples, sample_dim)*  
+        Mean of a distribution.  
+
+    - **log_variance:** *Tensor of shape(n_samples, sample_dim)*  
+        Log of variance of a distribution.  
+    
+    > **Returns:**  
+
+    - **samples:** *Tensor of shape(n_samples, sample_dim)*  
+        A sample from the distribution.  
+
 ## Loss Function - ELBOLoss
 
 pi-VAE learns the deep generative model and the approximate posterior q(z \| x, u) of the true posterior p(z \| x, u) by maximizing the evidence lower bound (ELBO) of p(x \| u). This loss function is implemented in the included `ELBOLoss` class.  

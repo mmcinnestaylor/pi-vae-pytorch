@@ -33,5 +33,8 @@ jobs:
       - name: Run Pytest
         run: pytest
 
-  call-publish-workflow:
-    uses: ./.github/workflows/publish-to-pypi.yml
+  #call-publish-workflow:
+  #  needs: test
+  #  permissions:
+  #    id-token: write
+  #  uses: ./.github/workflows/publish-to-pypi.yml

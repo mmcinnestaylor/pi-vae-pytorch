@@ -1,6 +1,6 @@
+from typing import Optional
 import torch
 from torch import nn
-
 from pi_vae_pytorch.layers import GINBlock, NFlowLayer, PermutationLayer
 
 
@@ -36,12 +36,12 @@ class GINFlowDecoder(nn.Module):
         z_dim: int,
         n_gin_blocks: int = 2,
         gin_block_depth: int = 2,
-        affine_input_layer_slice_dim: int = None,
+        affine_input_layer_slice_dim: Optional[int] = None,
         affine_n_hidden_layers: int = 2,
-        affine_hidden_layer_dim: int = None,
+        affine_hidden_layer_dim: Optional[int] = None,
         affine_hidden_layer_activation: nn.Module = nn.ReLU,
         nflow_n_hidden_layers: int = 2,
-        nflow_hidden_layer_dim: int = None,
+        nflow_hidden_layer_dim: Optional[int] = None,
         nflow_hidden_layer_activation: nn.Module = nn.ReLU,
         observation_model: str = 'poisson'
         ) -> None:

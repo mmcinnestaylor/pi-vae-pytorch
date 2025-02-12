@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-
 from pi_vae_pytorch.layers import MLP
 
 

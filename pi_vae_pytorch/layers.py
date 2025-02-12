@@ -1,3 +1,4 @@
+from typing import Optional
 import torch
 from torch import nn
 
@@ -109,7 +110,7 @@ class NFlowLayer(nn.Module):
         x_dim: int,
         z_dim: int,
         n_hidden_layers: int = 2,
-        hidden_layer_dim: int = None,
+        hidden_layer_dim: Optional[int] = None,
         hidden_layer_activation: nn.Module = nn.ReLU
         ) -> None:
         super().__init__()
@@ -162,9 +163,9 @@ class AffineCouplingLayer(nn.Module):
     def __init__(
         self,
         x_dim: int,
-        x_slice_dim: int = None,
+        x_slice_dim: Optional[int] = None,
         n_hidden_layers: int = 2,
-        hidden_layer_dim: int = None,
+        hidden_layer_dim: Optional[int] = None,
         hidden_layer_activation: nn.Module = nn.ReLU
         ) -> None:
         super().__init__()
@@ -245,9 +246,9 @@ class GINBlock(nn.Module):
         self,
         x_dim: int,
         n_affine_layers: int = 2,
-        affine_input_layer_slice_dim: int = None,
+        affine_input_layer_slice_dim: Optional[int] = None,
         affine_n_hidden_layers: int = 2,
-        affine_hidden_layer_dim: int = None,
+        affine_hidden_layer_dim: Optional[int] = None,
         affine_hidden_layer_activation: nn.Module = nn.ReLU
         ) -> None:
         super().__init__()

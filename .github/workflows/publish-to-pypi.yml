@@ -1,7 +1,10 @@
 name: Publish pi-VAE 🤖 package 📦 to TestPyPI and PyPI
 
 on:
-  workflow_call:
+  push:
+    tags:
+      - "v*.*.*"
+  #workflow_call:
 
 jobs:
     build:
