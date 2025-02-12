@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pi-vae-pytorch"
-dependencies = ["torch"]
+dependencies = ["torch=2.0"]
 requires-python = ">= 3.9"
 authors = [
     {name = "Marlan McInnes-Taylor", email = "mmcinnestaylor@gmail.com"}
@@ -27,6 +27,7 @@ keywords = [
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -35,11 +36,20 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://mmcinnestaylor.github.io/pi-vae-pytorch/"
-Repository = "https://github.com/mmcinnestaylor/pi-vae-pytorch"
+Homepage = "https://github.com/mmcinnestaylor/pi-vae-pytorch"
+Documentation = "https://mmcinnestaylor.github.io/pi-vae-pytorch/"
+Download = "https://github.com/mmcinnestaylor/pi-vae-pytorch/tags"
+Repository = "https://github.com/mmcinnestaylor/pi-vae-pytorch.git"
+Issues = "https://github.com/mmcinnestaylor/pi-vae-pytorch/issues"
 
 [tool.setuptools_scm]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
