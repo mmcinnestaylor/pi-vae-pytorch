@@ -1,0 +1,38 @@
+name: Test pi-VAE model
+
+on:
+  pull_request:
+  #push:
+  #  tags:
+  #    - "v*.*.*"  # Runs only when a new version tag is pushed
+
+jobs:
+  test:
+    name: Run Pytest on PyTorch Model
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]  # Test on multiple Python versions
+      fail-fast: false  # Ensures all versions run even if one fails
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install -e .
+
+      - name: Run Pytest
+        run: pytest
+
+  #call-publish-workflow:
+  #  uses: ./.github/workflows/publish-to-pypi.yml
