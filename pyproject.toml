@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pi-vae-pytorch"
-dependencies = ["torch=2.0"]
+dependencies = ["torch>=2.0"]
 requires-python = ">= 3.9"
 authors = [
     {name = "Marlan McInnes-Taylor", email = "mmcinnestaylor@gmail.com"}
