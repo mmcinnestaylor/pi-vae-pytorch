@@ -1,16 +1,26 @@
 # Poisson Identifiable VAE (pi-VAE) 2.0
-
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/mmcinnestaylor/pi-vae-pytorch/publish-to-pypi.yml?logo=github&logoColor=white&label=Publish%20to%20PyPI)
-![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)
-![License](https://img.shields.io/pypi/l/pi-vae-pytorch)  
-![PyPI - Version](https://img.shields.io/pypi/v/pi-vae-pytorch?label=pypi%20package)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/pi-vae-pytorch?label=pypi%20downloads)  
-![Conda - Version](https://img.shields.io/conda/vn/conda-forge/pi-vae-pytorch?label=conda%20package)
-![Conda - Downloads](https://img.shields.io/conda/d/conda-forge/pi-vae-pytorch?label=conda%20downloads)
-
 This is a Pytorch implementation of [Poisson Identifiable Variational Autoencoder (pi-VAE)](https://arxiv.org/abs/2011.04798), used to construct latent variable models of neural activity while simultaneously modeling the relation between the latent and task variables (non-neural variables, e.g. sensory, motor, and other externally observable states).  
 
 A special thank you to [Zhongxuan Wu](https://github.com/ZhongxuanWu) who helped in the design and testing of this implementation.  
+
+#### Code status
+
+![GitHub Actions Test Status](https://img.shields.io/github/actions/workflow/status/mmcinnestaylor/pi-vae-pytorch/test-package.yml?logo=github&label=Tests)
+![GitHub Actions Publish Status](https://img.shields.io/github/actions/workflow/status/mmcinnestaylor/pi-vae-pytorch/publish-to-pypi.yml?logo=github&logoColor=white&label=Publish%20to%20PyPI)
+![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)
+![License](https://img.shields.io/pypi/l/pi-vae-pytorch)  
+
+#### PyPI status
+
+![PyPI - Version](https://img.shields.io/pypi/v/pi-vae-pytorch?label=package)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/pi-vae-pytorch?label=downloads)
+![PyPI - Wheel](https://img.shields.io/pypi/wheel/pi-vae-pytorch)
+
+#### conda-forge status
+
+![Conda - Version](https://img.shields.io/conda/vn/conda-forge/pi-vae-pytorch?label=package)
+![Conda - Downloads](https://img.shields.io/conda/d/conda-forge/pi-vae-pytorch?label=downloads)
+![Conda - Platform](https://img.shields.io/conda/pn/conda-forge/pi-vae-pytorch)
 
 ### Model Versions
 
@@ -421,6 +431,35 @@ outputs = model(x, u) # dict
     label = torch.randn(3) # Size([1, u_dim])
 
     mean, log_variance = mdl.get_label_statistics(label) # each of Size([1, z_dim])
+    ```  
+
+- **predict_labels(*x, n_samples=1000, device=None*)**  
+    Returns the label probabilities associated with observation(s) `x`. An observation is first projected into the model's latent space by passing it through the encoder module. For each label in `u_dim`, an estimation of p(z \| u) is generated using Monte Carlo estimation with the specified number of samples. Next, the average distance between the projected observation and generated samples is computed, which serves as a proxy for the log likelihood. Softmax is then applied to these logits to produce the label probabilities.  
+    
+    *NOTE: Label prediction is currently supported only in the discrete label regime.*   
+
+    > **Parameters:**  
+
+    - **x**: *Tensor of shape(n_observations, x_dim)*  
+        Data in the model's observation space.  
+
+    - **n_samples**: *int, default=*`1000`  
+        Number of samples drawn per label during Monte Carlo estimation.  
+
+    - **device**: *torch.device, default=*`None` *(uses the CPU)*  
+        A [`torch.device`](https://pytorch.org/docs/stable/tensor_attributes.html#torch.device) object representing the device on which operations will be performed. Should match the `torch.device` on which the model resides.  
+    
+    > **Returns:**  
+    
+    - **predictions**: *Tensor of shape(n_observations, u_dim)*  
+        Label probabilities of the observation(s).  
+
+    **Example:**   
+    ```
+    mdl = PiVAE(x_dim=100, u_dim=3, z_dim=2) # discrete labels
+    x = torch.randn(10, 100) # Size([n_observations, x_dim])
+
+    predictions = mdl.predict_labels(x) # Size([n_observations, u_dim])
     ```  
 
 - **sample(*u, n_samples=1, return_z=False, device=None*)**  

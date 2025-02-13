@@ -269,6 +269,55 @@ class PiVAE(nn.Module):
         
         return label_mean, label_log_variance
     
+    def predict_labels(
+        self,
+        x: torch.Tensor,
+        n_samples: int = 1000,
+        device: Optional[torch.device] = None
+    ) -> torch.Tensor:
+        """
+        Returns the label probabilities associated with observation(s) `x`.
+
+        Parameters
+        ----------
+        - `x` (Tensor) - data in the model's observation space (`x_dim`). `Size([n_observations, x_dim])`
+        - `n_samples` (int, default=1000) - number of samples drawn per label during Monte Carlo estimation
+        - `device` (torch.device, default=None) - the torch device on which the model resides
+
+        Returns
+        -------
+        - `predictions` (Tensor) - the label probabilities of the observation(s). `Size([n_observations, u_dim])`
+        """
+
+        with torch.no_grad():
+            n_labels = self.label_prior.embedded_mean.weight.shape[0]
+            label_means, label_stds = None, None
+
+            z = self.encode(x)
+            _, latent_dim = z.shape
+
+            for u in range(n_labels):
+                mean, log_variance = self.get_label_statistics(u=u, device=device)
+
+                if label_means is None:
+                    label_means, label_stds = mean, torch.exp(0.5 * log_variance)
+                else:
+                    label_means = torch.cat((label_means, mean), dim=0)
+                    label_stds = torch.cat((label_stds, torch.exp(0.5 * log_variance)), dim=0)
+
+            # Sample from p(z|u) for each class
+            z_samples = label_means.unsqueeze(dim=0) + label_stds.unsqueeze(dim=0) * torch.randn(n_samples, n_labels, latent_dim)
+
+            # Compute distances between sampled z and actual z
+            z = z.unsqueeze(1).unsqueeze(dim=0)  # Size([1, batch_size, 1, latent_dim])
+            distances = torch.square(z - z_samples.unsqueeze(1)).sum(dim=-1)  # Size([n_samples, batch_size, n_labels])
+
+            # Estimate p(z|u) using Monte Carlo (negative distances as proxy for likelihood)
+            proxy_log_liklihood = torch.neg(distances.mean(dim=0))  # Average over samples, Size([batch_size, n_labels])
+            
+            # Normalize with softmax to approximate p(u|z)
+            return torch.nn.functional.softmax(proxy_log_liklihood, dim=1)
+
     def sample(
         self,
         u: Union[float, int, list, tuple, torch.Tensor],
@@ -304,14 +353,10 @@ class PiVAE(nn.Module):
 
             # Create covariance matrix
             variance = torch.exp(log_variance).squeeze(dim=0)
-            covar = torch.eye(mean.size(dim=1), device=device) # N x N
-
-            # Update diagonal with variances
-            for idx in range(mean.size(dim=1)):
-                covar[idx, idx] = variance[idx].item()
+            covariance = torch.diag_embed(variance)
 
             # Create distribution used for sampling
-            distribution = torch.distributions.multivariate_normal.MultivariateNormal(mean, covar)
+            distribution = torch.distributions.multivariate_normal.MultivariateNormal(mean, covariance)
             
             # Generate z samples
             z_samples = distribution.sample((n_samples,))
@@ -358,14 +403,10 @@ class PiVAE(nn.Module):
 
             # Create covariance matrix
             variance = torch.exp(log_variance).squeeze(dim=0)
-            covar = torch.eye(mean.size(dim=1), device=device) # N x N
-
-            # Update diagonal with variances
-            for idx in range(mean.size(dim=1)):
-                covar[idx, idx] = variance[idx].item()
+            covariance = torch.diag_embed(variance)
 
             # Create distribution used for sampling
-            distribution = torch.distributions.multivariate_normal.MultivariateNormal(mean, covar)
+            distribution = torch.distributions.multivariate_normal.MultivariateNormal(mean, covariance)
                 
             # Generate z samples
             samples = distribution.sample((n_samples,))
