@@ -24,7 +24,8 @@ class ELBOLoss(nn.Module):
     - label_log_variance (Tensor) - log of variances from label prior p(z|u). Size([n_samples, z_dim])
     - encoder_mean (Tensor, default=None) - means from encoder p(z|x). Size([n_samples, z_dim])
     - encoder_log_variance (Tensor, default=None) - means from encoder p(z|x). Size([n_samples, z_dim])
-    - observation_noise_model (nn.Module, default=None) - if gaussian observation model, set the observation noise level as different real numbers.
+    - observation_noise_model (nn.Module, default=None) - if gaussian observation model, set the observation noise level as different real numbers
+    - kl_weight (float, default=1.0) - KL annealing weight term used to scale the KL divergence component of the loss 
 
     Returns
     -------
@@ -80,7 +81,8 @@ class ELBOLoss(nn.Module):
         label_log_variance: torch.Tensor,
         encoder_mean: Optional[torch.Tensor] = None,
         encoder_log_variance: Optional[torch.Tensor] = None,
-        observation_noise_model: Optional[nn.Module] = None
+        observation_noise_model: Optional[nn.Module] = None,
+        kl_weight: float = 1.0
         ) -> torch.Tensor:
 
         if self.observation_model == 'poisson':
@@ -96,7 +98,7 @@ class ELBOLoss(nn.Module):
             posterior_kl_loss = self.compute_kl_loss(posterior_mean, posterior_log_variance, label_mean, label_log_variance)
             kl_loss = self.alpha * encoder_kl_loss + (1 - self.alpha) * posterior_kl_loss
         
-        return torch.mean(observation_log_liklihood - kl_loss)
+        return torch.mean(observation_log_liklihood - kl_weight * kl_loss)
     
     @staticmethod
     def compute_kl_loss(

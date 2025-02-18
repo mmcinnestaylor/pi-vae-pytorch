@@ -712,7 +712,10 @@ pi_vae_pytorch.ELBOLoss(
 - **observation_noise_model:** *nn.Module, default=*`None`  
     - Only used when `observation_model='gaussian'`  
     
-    The noise model used when pi-VAE's decoder utilizes a Gaussian observation model. When pi-VAE is initialized with `decoder_observation_model='gaussian'`, the model's `observation_noise_model` attribute should be used.
+    The noise model used when pi-VAE's decoder utilizes a Gaussian observation model. When pi-VAE is initialized with `decoder_observation_model='gaussian'`, the model's `observation_noise_model` attribute should be used.  
+
+- **kl_weight:** *float, default=*`1.0`  
+    Weight term used to scale the KL divergence component of the loss. Enables the use of KL annealing.  
 
 ### Outputs
 
