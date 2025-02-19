@@ -306,7 +306,7 @@ class PiVAE(nn.Module):
                     label_stds = torch.cat((label_stds, torch.exp(0.5 * log_variance)), dim=0)
 
             # Sample from p(z|u) for each class
-            z_samples = label_means.unsqueeze(dim=0) + label_stds.unsqueeze(dim=0) * torch.randn(n_samples, n_labels, latent_dim)
+            z_samples = label_means.unsqueeze(dim=0) + label_stds.unsqueeze(dim=0) * torch.randn(n_samples, n_labels, latent_dim, device=device)
 
             # Compute distances between sampled z and actual z
             z = z.unsqueeze(1).unsqueeze(dim=0)  # Size([1, batch_size, 1, latent_dim])
