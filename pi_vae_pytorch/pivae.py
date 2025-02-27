@@ -43,32 +43,131 @@ class PiVAE(nn.Module):
     - decoder_nflow_hidden_layer_dim (int) - when None, x_dim // 4 is assigned. Otherwise max(decoder_nflow_hidden_layer_dim, x_dim // 4).
     """
     
-    def __init__(
-        self,
-        x_dim: int,
-        u_dim: int,
-        z_dim: int,
-        discrete_labels: bool = True,
-        encoder_n_hidden_layers: int = 2,
-        encoder_hidden_layer_dim: int = 128,
-        encoder_hidden_layer_activation: nn.Module = nn.Tanh,
-        decoder_n_gin_blocks: int = 2,
-        decoder_gin_block_depth: int = 2,
-        decoder_affine_input_layer_slice_dim: Optional[int] = None,
-        decoder_affine_n_hidden_layers: int = 2,
-        decoder_affine_hidden_layer_dim: Optional[int] = None,
-        decoder_affine_hidden_layer_activation: nn.Module = nn.ReLU,
-        decoder_nflow_n_hidden_layers: int = 2,
-        decoder_nflow_hidden_layer_dim: Optional[int] = None,
-        decoder_nflow_hidden_layer_activation: nn.Module = nn.ReLU,
-        decoder_observation_model: str = 'poisson',
-        decoder_fr_clamp_min: float = 1E-7,
-        decoder_fr_clamp_max: float = 1E7,
-        label_prior_n_hidden_layers: int = 2,
-        label_prior_hidden_layer_dim: int = 32,
-        label_prior_hidden_layer_activation: nn.Module = nn.Tanh
-        ) -> None:
+    def __init__(self, x_dim: int, u_dim: int, z_dim: int, **kwargs) -> None:
         super().__init__()
+
+        # Extract and validate arguments
+        if not isinstance(x_dim, int):
+            raise TypeError('x_dim must be an int')
+        elif x_dim < 1:
+            raise ValueError('x_dim must be greater than or equal to 1')
+        
+        if not isinstance(u_dim, int):
+            raise TypeError('u_dim must be an int')
+        elif u_dim < 1:
+            raise ValueError('u_dim must be greater than or equal to 1')
+
+        if not isinstance(z_dim, int):
+            raise TypeError('z_dim must be an int')
+        elif z_dim < 1:
+            raise ValueError('z_dim must be greater than or equal to 1')
+        
+        discrete_labels = kwargs.pop('discrete_labels', True)
+        if not isinstance(discrete_labels, bool):
+            raise TypeError('discrete_labels must be a bool')
+        
+        encoder_n_hidden_layers = kwargs.pop('encoder_n_hidden_layers', 2)
+        if not isinstance(encoder_n_hidden_layers, int):
+            raise TypeError('encoder_n_hidden_layers must be an int')
+        elif encoder_n_hidden_layers < 1:
+            raise ValueError('encoder_n_hidden_layers must be greater than or equal to 1')
+        
+        encoder_hidden_layer_dim = kwargs.pop('encoder_hidden_layer_dim', 128)
+        if not isinstance(encoder_hidden_layer_dim, int):
+            raise TypeError('encoder_hidden_layer_dim must be an int')
+        elif encoder_hidden_layer_dim < 1:
+            raise ValueError('encoder_hidden_layer_dim must be greater than or equal to 1')
+        
+        encoder_hidden_layer_activation = kwargs.pop('encoder_hidden_layer_activation', nn.Tanh)
+        if not isinstance(encoder_hidden_layer_activation, nn.Module):
+            raise TypeError('encoder_hidden_layer_activation must be a nn.Module')
+        
+        decoder_n_gin_blocks = kwargs.pop('decoder_n_gin_blocks', 2)
+        if not isinstance(decoder_n_gin_blocks, int):
+            raise TypeError('decoder_n_gin_blocks must be an int')
+        elif decoder_n_gin_blocks < 1:
+            raise ValueError('decoder_n_gin_blocks must be greater than or equal to 1')
+        
+        decoder_gin_block_depth = kwargs.pop('decoder_gin_block_depth', 2)
+        if not isinstance(decoder_gin_block_depth, int):
+            raise TypeError('decoder_gin_block_depth must be an int')
+        elif decoder_gin_block_depth < 1:
+            raise ValueError('decoder_gin_block_depth must be greater than or equal to 1')
+        
+        decoder_affine_input_layer_slice_dim = kwargs.pop('decoder_affine_input_layer_slice_dim', None)
+        if not isinstance(decoder_affine_input_layer_slice_dim, (int, type(None))):
+            raise TypeError('decoder_affine_input_layer_slice_dim must be an int or None')
+        elif decoder_affine_input_layer_slice_dim is not None and decoder_affine_input_layer_slice_dim < 1:
+            raise ValueError('decoder_affine_input_layer_slice_dim must be greater than or equal to 1')
+        
+        decoder_affine_n_hidden_layers = kwargs.pop('decoder_affine_n_hidden_layers', 2)
+        if not isinstance(decoder_affine_n_hidden_layers, int):
+            raise TypeError('decoder_affine_n_hidden_layers must be an int')
+        elif decoder_affine_n_hidden_layers < 1:
+            raise ValueError('decoder_affine_n_hidden_layers must be greater than or equal to 1')
+        
+        decoder_affine_hidden_layer_dim = kwargs.pop('decoder_affine_hidden_layer_dim', None)
+        if not isinstance(decoder_affine_hidden_layer_dim, (int, type(None))):
+            raise TypeError('decoder_affine_hidden_layer_dim must be an int or None')
+        elif decoder_affine_hidden_layer_dim is not None and decoder_affine_hidden_layer_dim < 1:
+            raise ValueError('decoder_affine_hidden_layer_dim must be greater than or equal to 1')
+        
+        decoder_affine_hidden_layer_activation = kwargs.pop('decoder_affine_hidden_layer_activation', nn.ReLU)
+        if not isinstance(decoder_affine_hidden_layer_activation, nn.Module):
+            raise TypeError('decoder_affine_hidden_layer_activation must be a nn.Module')
+        
+        decoder_nflow_n_hidden_layers = kwargs.pop('decoder_nflow_n_hidden_layers', 2)
+        if not isinstance(decoder_nflow_n_hidden_layers, int):
+            raise TypeError('decoder_nflow_n_hidden_layers must be an int')
+        elif decoder_nflow_n_hidden_layers < 1:
+            raise ValueError('decoder_nflow_n_hidden_layers must be greater than or equal to 1')
+        
+        decoder_nflow_hidden_layer_dim = kwargs.pop('decoder_nflow_hidden_layer_dim', None)
+        if not isinstance(decoder_nflow_hidden_layer_dim, (int, type(None))):
+            raise TypeError('decoder_nflow_hidden_layer_dim must be an int or None')
+        elif decoder_nflow_hidden_layer_dim is not None and decoder_nflow_hidden_layer_dim < 1:
+            raise ValueError('decoder_nflow_hidden_layer_dim must be greater than or equal to 1')
+        
+        decoder_nflow_hidden_layer_activation = kwargs.pop('decoder_nflow_hidden_layer_activation', nn.ReLU)
+        if not isinstance(decoder_nflow_hidden_layer_activation, nn.Module):
+            raise TypeError('decoder_nflow_hidden_layer_activation must be a nn.Module')
+        
+        decoder_observation_model = kwargs.pop('decoder_observation_model', 'poisson')
+        if not isinstance(decoder_observation_model, str):
+            raise TypeError('decoder_observation_model must be a str')
+        elif decoder_observation_model not in ['poisson', 'gaussian']:
+            raise ValueError("decoder_observation_model must be either 'poisson' or 'gaussian'")
+        
+        decoder_fr_clamp_min = kwargs.pop('decoder_fr_clamp_min', 1E-7)
+        if not isinstance(decoder_fr_clamp_min, (int, float)):
+            raise TypeError('decoder_fr_clamp_min must be an int or float')
+        
+        decoder_fr_clamp_max = kwargs.pop('decoder_fr_clamp_max', 1E7)
+        if not isinstance(decoder_fr_clamp_max, (int, float)):
+            raise TypeError('decoder_fr_clamp_max must be an int or float')
+        
+        if decoder_fr_clamp_min > decoder_fr_clamp_max:
+            raise ValueError(f"decoder_fr_clamp_min: {decoder_fr_clamp_min} must be less than decoder_fr_clamp_max: {decoder_fr_clamp_max}")
+        
+        label_prior_n_hidden_layers = kwargs.pop('label_prior_n_hidden_layers', 2)
+        if not isinstance(label_prior_n_hidden_layers, int):
+            raise TypeError('label_prior_n_hidden_layers must be an int')
+        elif label_prior_n_hidden_layers < 1:
+            raise ValueError('label_prior_n_hidden_layers must be greater than or equal to 1')
+        
+        label_prior_hidden_layer_dim = kwargs.pop('label_prior_hidden_layer_dim', 32)
+        if not isinstance(label_prior_hidden_layer_dim, int):
+            raise TypeError('label_prior_hidden_layer_dim must be an int')
+        elif label_prior_hidden_layer_dim < 1:
+            raise ValueError('label_prior_hidden_layer_dim must be greater than or equal to 1')
+        
+        label_prior_hidden_layer_activation = kwargs.pop('label_prior_hidden_layer_activation', nn.Tanh)
+        if not isinstance(label_prior_hidden_layer_activation, nn.Module):
+            raise TypeError('label_prior_hidden_layer_activation must be a nn.Module')
+
+        # Check for any unexpected kwargs
+        if kwargs:
+            raise ValueError(f"Unexpected keyword arguments: {kwargs}")
 
         if decoder_observation_model == 'gaussian':
             self.observation_noise_model = nn.Linear(
@@ -78,8 +177,6 @@ class PiVAE(nn.Module):
             )
         elif decoder_observation_model == 'poisson':
             self.observation_noise_model = None
-        else:
-            raise ValueError(f"Invalid observation model: {decoder_observation_model}")
         
         self.decoder_observation_model = decoder_observation_model
         
@@ -98,12 +195,8 @@ class PiVAE(nn.Module):
             observation_model=decoder_observation_model
         )
 
-        if decoder_fr_clamp_min < decoder_fr_clamp_max:
-            self.decoder_fr_clamp_min = decoder_fr_clamp_min
-            self.decoder_fr_clamp_max = decoder_fr_clamp_max
-        else:
-            raise ValueError(f"decoder_fr_clamp_min: {decoder_fr_clamp_min} must be less than decoder_fr_clamp_max: {decoder_fr_clamp_max}")
-        
+        self.decoder_fr_clamp_min = decoder_fr_clamp_min
+        self.decoder_fr_clamp_max = decoder_fr_clamp_max        
         
         self.encoder = MLPEncoder(
             x_dim=x_dim,
